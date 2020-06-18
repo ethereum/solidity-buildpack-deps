@@ -58,5 +58,7 @@ RUN set -ex; \
 
 FROM base
 COPY --from=libraries /usr/lib /usr/lib
+RUN true
 COPY --from=libraries /usr/bin /usr/bin
+RUN true
 COPY --from=libraries /usr/include /usr/include

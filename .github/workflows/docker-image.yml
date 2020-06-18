@@ -1,0 +1,75 @@
+name: Docker Image CI
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    env:
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_DOCKER_REPOSITORY: docker.pkg.github.com/${{ github.repository }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        
+      - name: build image [ubuntu1604.clang.ossfuzz]
+        run: |
+          docker build ./docker --file docker/Dockerfile.ubuntu1604.clang.ossfuzz --tag ubuntu1604.clang.ossfuzz
+
+      - name: build image [ubuntu1804]
+        run: |
+          docker build ./docker/ --file docker/Dockerfile.ubuntu1804 --tag ubuntu1804
+
+      - name: build image [ubuntu2004]
+        run: |
+          docker build ./docker --file docker/Dockerfile.ubuntu2004 --tag ubuntu2004
+      
+      - name: build image [ubuntu2004.clang]
+        run: |
+          docker build ./docker --file docker/Dockerfile.ubuntu2004.clang --tag ubuntu2004.clang
+
+      - name: build image [emscripten]
+        run: |
+          docker build ./docker --file docker/Dockerfile.emscripten --tag emscripten
+
+      - name: Push images
+        run: |
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+                    
+          echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+
+          docker tag ubuntu1604.clang.ossfuzz $GITHUB_DOCKER_REPOSITORY/ubuntu1604.clang.ossfuzz:$VERSION
+          docker push $GITHUB_DOCKER_REPOSITORY/ubuntu1604.clang.ossfuzz:$VERSION
+          docker tag ubuntu1604.clang.ossfuzz $GITHUB_DOCKER_REPOSITORY/ubuntu1604.clang.ossfuzz:latest
+          docker push $GITHUB_DOCKER_REPOSITORY/ubuntu1604.clang.ossfuzz:latest
+          
+          docker tag ubuntu1804 $GITHUB_DOCKER_REPOSITORY/ubuntu1804:$VERSION
+          docker push $GITHUB_DOCKER_REPOSITORY/ubuntu1804:$VERSION
+          docker tag ubuntu1804 $GITHUB_DOCKER_REPOSITORY/ubuntu1804:latest
+          docker push $GITHUB_DOCKER_REPOSITORY/ubuntu1804:latest
+          
+          docker tag ubuntu2004 $GITHUB_DOCKER_REPOSITORY/ubuntu2004:$VERSION
+          docker push $GITHUB_DOCKER_REPOSITORY/ubuntu2004:$VERSION
+          docker tag ubuntu2004 $GITHUB_DOCKER_REPOSITORY/ubuntu2004:latest
+          docker push $GITHUB_DOCKER_REPOSITORY/ubuntu2004:latest
+          
+          docker tag ubuntu2004.clang $GITHUB_DOCKER_REPOSITORY/ubuntu2004.clang:$VERSION
+          docker push $GITHUB_DOCKER_REPOSITORY/ubuntu2004.clang:$VERSION
+          docker tag ubuntu2004.clang $GITHUB_DOCKER_REPOSITORY/ubuntu2004.clang:latest
+          docker push $GITHUB_DOCKER_REPOSITORY/ubuntu2004.clang:latest
+          
+          docker tag emscripten $GITHUB_DOCKER_REPOSITORY/emscripten:$VERSION
+          docker push $GITHUB_DOCKER_REPOSITORY/emscripten:$VERSION
+          docker tag emscripten $GITHUB_DOCKER_REPOSITORY/emscripten:latest
+          docker push $GITHUB_DOCKER_REPOSITORY/emscripten:latest
+
+          docker logout

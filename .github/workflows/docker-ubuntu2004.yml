@@ -1,0 +1,37 @@
+name: Docker Image [ubuntu2004]
+
+on:
+  push:
+    tags:
+      - ubuntu2004-v*
+
+jobs:
+  build:
+    env:
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_DOCKER_REPOSITORY: docker.pkg.github.com/${{ github.repository }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build image [ubuntu2004]
+        run: |
+          docker build ./docker --file docker/Dockerfile.ubuntu2004 --tag ubuntu2004
+
+      - name: Push image [ubuntu2004]
+        run: |
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^ubuntu2004-v//')-pre
+
+          echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+
+          docker tag ubuntu2004 $GITHUB_DOCKER_REPOSITORY/ubuntu2004:$VERSION
+          docker push $GITHUB_DOCKER_REPOSITORY/ubuntu2004:$VERSION
+
+          docker logout
