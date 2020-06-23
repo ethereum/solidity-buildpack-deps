@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     env:
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_DOCKER_REPOSITORY: docker.pkg.github.com/${{ github.repository }}
       IMAGE_NAME: ubuntu2004
@@ -19,18 +18,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build image [ubuntu2004]
+      - name: Build image
         run: |
           docker build ./docker --file docker/Dockerfile.$IMAGE_NAME --tag $IMAGE_NAME
 
-      - name: Push image [ubuntu2004]
+      - name: Push image
         run: |
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
 
           if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
             if [[ "$VERSION" =~ ^$IMAGE_NAME-v* ]]; then
-              VERSION="$(echo $VERSION | sed -e 's/^$IMAGE_NAME-v//')-pre"
+              VERSION="$(echo $VERSION | sed -e "s/^$IMAGE_NAME-v//")-pre"
             elif [[ "$VERSION" =~ ^v* ]]; then
               VERSION="$(echo $VERSION | sed -e 's/^v//')"
             fi
