@@ -1,13 +1,10 @@
-env:
-  IMAGE_NAME: ubuntu2004
-
-name: Docker Image [${{ IMAGE_NAME }}]
+name: Docker Image
 
 on:
   push:
     tags:
       - v*
-      - ${{ IMAGE_NAME }}-v*
+      - ubuntu2004-v*
 
 jobs:
   build:
@@ -15,6 +12,7 @@ jobs:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_DOCKER_REPOSITORY: docker.pkg.github.com/${{ github.repository }}
+      IMAGE_NAME: ubuntu2004
 
     runs-on: ubuntu-latest
 
