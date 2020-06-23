@@ -21,7 +21,7 @@ jobs:
 
       - name: Build image [ubuntu2004]
         run: |
-          docker build ./docker --file docker/Dockerfile.${{ IMAGE_NAME }} --tag ${{ IMAGE_NAME }}
+          docker build ./docker --file docker/Dockerfile.$IMAGE_NAME --tag $IMAGE_NAME
 
       - name: Push image [ubuntu2004]
         run: |
@@ -29,8 +29,8 @@ jobs:
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
 
           if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
-            if [[ "$VERSION" =~ ^${{ IMAGE_NAME }}-v* ]]; then
-              VERSION="$(echo $VERSION | sed -e 's/^${{ IMAGE_NAME }}-v//')-pre"
+            if [[ "$VERSION" =~ ^$IMAGE_NAME-v* ]]; then
+              VERSION="$(echo $VERSION | sed -e 's/^$IMAGE_NAME-v//')-pre"
             elif [[ "$VERSION" =~ ^v* ]]; then
               VERSION="$(echo $VERSION | sed -e 's/^v//')"
             fi
@@ -38,7 +38,7 @@ jobs:
 
           echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
 
-          docker tag ${{ IMAGE_NAME }} $GITHUB_DOCKER_REPOSITORY/${{ IMAGE_NAME }}:$VERSION
-          docker push $GITHUB_DOCKER_REPOSITORY/${{ IMAGE_NAME }}:$VERSION
+          docker tag $IMAGE_NAME $GITHUB_DOCKER_REPOSITORY/$IMAGE_NAME:$VERSION
+          docker push $GITHUB_DOCKER_REPOSITORY/$IMAGE_NAME:$VERSION
 
           docker logout
