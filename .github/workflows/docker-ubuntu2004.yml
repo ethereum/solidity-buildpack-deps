@@ -1,4 +1,4 @@
-name: Docker Image
+name: Docker Image [ubuntu2004]
 
 on:
   push:
@@ -19,11 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build image [$IMAGE_NAME]
+      - name: Build image [ubuntu2004]
         run: |
           docker build ./docker --file docker/Dockerfile.${{ IMAGE_NAME }} --tag ${{ IMAGE_NAME }}
 
-      - name: Push image [${{ IMAGE_NAME }}]
+      - name: Push image [ubuntu2004]
         run: |
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
