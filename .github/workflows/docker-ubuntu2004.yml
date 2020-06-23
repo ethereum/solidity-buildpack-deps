@@ -1,9 +1,13 @@
-name: Docker Image [ubuntu2004]
+env:
+  IMAGE_NAME: ubuntu2004
+
+name: Docker Image [${{ IMAGE_NAME }}]
 
 on:
   push:
     tags:
-      - ubuntu2004-v*
+      - v*
+      - ${{ IMAGE_NAME }}-v*
 
 jobs:
   build:
@@ -17,21 +21,26 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build image [ubuntu2004]
+      - name: Build image [${{ IMAGE_NAME }}]
         run: |
-          docker build ./docker --file docker/Dockerfile.ubuntu2004 --tag ubuntu2004
+          docker build ./docker --file docker/Dockerfile.${{ IMAGE_NAME }} --tag ${{ IMAGE_NAME }}
 
-      - name: Push image [ubuntu2004]
+      - name: Push image [${{ IMAGE_NAME }}]
         run: |
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
 
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^ubuntu2004-v//')-pre
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            if [[ "$VERSION" =~ ^${{ IMAGE_NAME }}-v* ]]; then
+              VERSION="$(echo $VERSION | sed -e 's/^${{ IMAGE_NAME }}-v//')-pre"
+            elif [[ "$VERSION" =~ ^v* ]]; then
+              VERSION="$(echo $VERSION | sed -e 's/^v//')"
+            fi
+          fi
 
           echo ${GITHUB_TOKEN} | docker login docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
 
-          docker tag ubuntu2004 $GITHUB_DOCKER_REPOSITORY/ubuntu2004:$VERSION
-          docker push $GITHUB_DOCKER_REPOSITORY/ubuntu2004:$VERSION
+          docker tag ${{ IMAGE_NAME }} $GITHUB_DOCKER_REPOSITORY/${{ IMAGE_NAME }}:$VERSION
+          docker push $GITHUB_DOCKER_REPOSITORY/${{ IMAGE_NAME }}:$VERSION
 
           docker logout
